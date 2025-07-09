@@ -1,27 +1,26 @@
-import React from 'react'
-import { Image, ImageBackground, StyleSheet, Text, View } from 'react-native'
-import {Images} from '../assets/images'
-// import MapPin from '../assets/locationIco.svg'
-
-// import SettingsIco from '../assets/settingsIco.svg'
+import React from 'react';
+import { Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import {Images} from '../assets/images';
+import MapPin from '../assets/locationIco.svg';
+import SettingsIco from '../assets/settingsIco.svg';
 
 const MainScreen = () => {
   const {city, temp_c, icon, text} = {
     city: 'Санкт-Петербург',
     temp_c: '24',
     icon: '//cdn.weatherapi.com/weather/64x64/day/122.png',
-    text: 'Пасмурно'
-  }
+    text: 'Пасмурно',
+  };
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={Images.backgroundOne} style={styles.background}>
       <View>
         <View>
           <View style={styles.location}>
-            {/* <MapPin width={24} height={24}/> */}
+            <MapPin width={24} height={24}/>
             <Text>{city}</Text>
           </View>
-          {/* <View><SettingsIco width={40} height={40}/></View> */}
+          <View><SettingsIco width={40} height={40}/></View>
         </View>
         <View>
           <View><Text style={styles.temp}>{temp_c} C{'\u00B0'}</Text></View>
@@ -29,12 +28,12 @@ const MainScreen = () => {
             <Image source={{uri: `https:${icon}`}} width={40} height={40}/>
           </View>
         </View>
-        
+
       </View>
       </ImageBackground>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -115,4 +114,4 @@ containerHeadline: {
 },
 });
 
-export default MainScreen
+export default MainScreen;
