@@ -16,17 +16,26 @@ import SettingsIco from '../assets/settingsIco.svg';
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {conditions} from '../functions/conditions';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
+
+const CustomHandle = () => <View style={styles.handle} />;
 
 const MainScreen = () => {
-  const {city, temp, icon, desc} = useSelector(
-    (state: RootState) => state.weather,
-  );
+  const {
+    city,
+    temp,
+    icon,
+    desc,
+    forecast: {days, day},
+  } = useSelector((state: RootState) => state.weather);
+  const [activeButton, setActiveButton] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const bottomSheetRef = useRef<BottomSheet>(null)
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index)
-  }, [])
+    console.log('handleSheetChanges', index);
+  }, []);
+  const snapPoints = useMemo(() => ['25%', '50%', '100%'], []);
+  console.log('forecast', days, day);
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={Images.backgroundOne} style={styles.background}>
@@ -42,14 +51,23 @@ const MainScreen = () => {
               animationType="slide"
               transparent={true}
               visible={modalVisible}>
-              <View>
-                <View>
-                  <TextInput placeholder="Введите название города" />
-                  <Button title="Искать"></Button>
+              <View style={styles.modalCont}>
+                <View style={styles.searchCont}>
+                  <Text style={styles.textOnInput}>
+                    Введите название города:
+                  </Text>
+                  <TextInput style={styles.modalInput} />
+                  <View style={styles.buttonsCont}>
+                    <TouchableOpacity
+                      style={styles.btnEsc}
+                      onPress={() => setModalVisible(false)}>
+                      <Text style={styles.btnTextEsc}>Отмена</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.btnSave}>
+                      <Text style={styles.btnTextSave}>Сохранить</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <Button
-                  title="Закрыть"
-                  onPress={() => setModalVisible(false)}></Button>
               </View>
             </Modal>
             <View>
@@ -70,11 +88,72 @@ const MainScreen = () => {
             </View>
           </View>
           <View style={styles.container}>
-            {/* <BottomSheet ref={bottomSheetRef} onChange={handleSheetChanges}>
+            <BottomSheet
+              handleComponent={CustomHandle}
+              backgroundStyle={{
+                backgroundColor: 'rgba(255,255,255,0.5)',
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+              }}
+              ref={bottomSheetRef}
+              onChange={handleSheetChanges}
+              snapPoints={snapPoints}>
               <BottomSheetView>
-                <Text>Hello</Text>
+                <View style={styles.bottomCont}>
+                  <TouchableOpacity
+                    onPress={() => setActiveButton(true)}
+                    style={activeButton ? styles.btnActive : styles.btnDefault}>
+                    <Text
+                      style={
+                        activeButton
+                          ? styles.btnTextActive
+                          : styles.btnTextDefault
+                      }>
+                      По часам
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setActiveButton(false)}
+                    style={activeButton ? styles.btnDefault : styles.btnActive}>
+                    <Text
+                      style={
+                        activeButton
+                          ? styles.btnTextDefault
+                          : styles.btnTextActive
+                      }>
+                      По дням
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.forecastList}>
+                  {!activeButton
+                    ? days.map(day => (
+                        <View style={styles.forecastItem}>
+                          <Text style={styles.forecastDate}>{day.date}</Text>
+                          <Text style={styles.forecastText}>{day.text}</Text>
+                          <Text style={styles.forecastTemp}>{day.temp}</Text>
+                          <Image
+                            source={{uri: `https:${day.icon}`}}
+                            width={40}
+                            height={40}
+                          />
+                        </View>
+                      ))
+                    : day.map(day => (
+                        <View style={styles.forecastItem}>
+                          <Text style={styles.forecastDate}>{day.date}</Text>
+                          <Text style={styles.forecastText}>{day.text}</Text>
+                          <Text style={styles.forecastTemp}>{day.temp}</Text>
+                          <Image
+                            source={{uri: `https:${day.icon}`}}
+                            width={40}
+                            height={40}
+                          />
+                        </View>
+                      ))}
+                </View>
               </BottomSheetView>
-            </BottomSheet> */}
+            </BottomSheet>
           </View>
         </View>
       </ImageBackground>
@@ -83,6 +162,122 @@ const MainScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  forecastList: {
+    paddingHorizontal: 20,
+
+  },
+  forecastItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginBottom: 16,
+    paddingHorizontal: 16
+  },
+  forecastDate : {
+    fontSize: 18
+  },
+  forecastText : {
+    fontSize: 18
+  },
+  forecastTemp : {
+    fontSize: 18
+  },
+  handle: {
+    height: 8,
+    width: 80,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    alignSelf: 'center',
+    marginTop: 10,
+  },
+  bottomCont: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  btnActive: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    paddingVertical: 16,
+  },
+  btnDefault: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    borderColor: 'white',
+    borderWidth: 1,
+  },
+  btnTextActive: {
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  btnTextDefault: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'white',
+  },
+  modalCont: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    height: '100%',
+  },
+  searchCont: {
+    flexDirection: 'column',
+    backgroundColor: 'white',
+    borderRadius: 24,
+    width: '80%',
+    padding: 20,
+    height: 200,
+  },
+  textOnInput: {
+    fontSize: 20,
+    fontWeight: 500,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: 'rgba(225, 225, 225, 1)',
+    borderRadius: 13,
+    marginTop: 10,
+  },
+  buttonsCont: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 24,
+  },
+  btnSave: {
+    flex: 1,
+    backgroundColor: 'rgba(2, 36, 255, 1)',
+    borderRadius: 16,
+    justifyContent: 'center',
+    marginVertical: 15,
+  },
+  btnEsc: {
+    flex: 1,
+    borderRadius: 16,
+    justifyContent: 'center',
+    borderColor: 'rgba(2, 36, 255, 1)',
+    borderWidth: 1,
+    marginVertical: 15,
+  },
+  btnTextEsc: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'rgba(2, 36, 255, 1)',
+  },
+  btnTextSave: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'white',
+  },
   mainContainer: {
     flex: 1,
   },
@@ -149,8 +344,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor:'blue',
-    flexDirection: 'column'
+    flexDirection: 'column',
   },
   contentContainer: {
     flex: 1,

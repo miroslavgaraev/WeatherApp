@@ -2,13 +2,26 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import React from 'react'
 import { getCurrentWeather, getForecast } from '../api/api'
 
+interface DayForecast {
+  temp: number,
+  date: string,
+  icon: string,
+  text: string,
+}
+
+interface Forecast{
+  day: DayForecast[],
+  days: DayForecast[]
+}
+
 interface WeatherState {
   longitude: string,
   isLoading: boolean,
   temp: number,
   city: string,
   desc: string,
-  icon: string
+  icon: string,
+  forecast: Forecast,
 }
 
 const initialState: WeatherState = {
@@ -17,7 +30,11 @@ const initialState: WeatherState = {
   temp: 0,
   city: '',
   desc: '',
-  icon: ''
+  icon: '',
+  forecast: {
+    day: [],
+    days: []
+  }
 }
 
 const weatherSlice = createSlice({
@@ -37,6 +54,29 @@ const weatherSlice = createSlice({
       state.desc = text
       state.icon = icon
       state.isLoading = false
+      
+    })
+    .addCase(getWeatherForecast.fulfilled, (state, actions) => {
+      console.log('actions', actions)
+      const day = actions.payload[0].hour.map(hour => {
+        return {
+          temp: hour.temp_c,
+          date: hour.time,
+          text: hour.condition.text,
+          icon: hour.condition.icon
+        }
+      })
+      const days = actions.payload.map(day => {
+        return {
+          date: day.date,
+          temp: day.day.avgtemp_c, 
+          text: day.day.condition.text, 
+          icon: day.day.condition.icon
+        }
+      })
+      state.forecast.days = days
+      state.forecast.day = day
+      
     })
   }
 })
@@ -63,7 +103,8 @@ export const getWeatherForecast = createAsyncThunk(
     try {
       const {latitude, longitude} = coords
       const response = await getForecast(latitude, longitude)
-      return response.data
+      console.log(response, 'forecast')
+      return response.data.forecast.forecastday
     }
     catch (error){
       return thunkAPI.rejectWithValue(error.message)
