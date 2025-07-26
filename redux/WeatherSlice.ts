@@ -3,14 +3,17 @@ import React from 'react';
 import { getCurrentWeather, getForecast } from '../api/api';
 
 interface DayForecast {
-  condition: object,
-  temp_c: number,
-  time: string
+  temp: number,
+  date: string,
+  icon: string,
+  text: string,
 }
-interface Forecast {
+
+interface Forecast{
   day: DayForecast[],
   days: DayForecast[]
 }
+
 interface WeatherState {
   longitude: string,
   isLoading: boolean,
@@ -44,13 +47,36 @@ const weatherSlice = createSlice({
       state.isLoading = true;
     })
     .addCase(currentWeather.fulfilled, (state, actions) => {
+      console.log(actions);
       const {payload: {current: {temp_c, condition: {text, icon}}, location: {name}} } = actions;
       state.temp = temp_c;
       state.city = name;
       state.desc = text;
       state.icon = icon;
       state.isLoading = false;
-      console.log('RESULT 4', state, );
+
+    })
+    .addCase(getWeatherForecast.fulfilled, (state, actions) => {
+      console.log('actions', actions);
+      const day = actions.payload[0].hour.map(hour => {
+        return {
+          temp: hour.temp_c,
+          date: hour.time,
+          text: hour.condition.text,
+          icon: hour.condition.icon,
+        };
+      });
+      const days = actions.payload.map(day => {
+        return {
+          date: day.date,
+          temp: day.day.avgtemp_c,
+          text: day.day.condition.text,
+          icon: day.day.condition.icon,
+        };
+      });
+      state.forecast.days = days;
+      state.forecast.day = day;
+
     })
     .addCase(getWeatherForecast.fulfilled, (state, action) => {
       // const {hour} = action.payload[0];
@@ -80,6 +106,7 @@ export const getWeatherForecast = createAsyncThunk(
     try {
       const {latitude, longitude} = coords;
       const response = await getForecast(latitude, longitude);
+      console.log(response, 'forecast');
       return response.data.forecast.forecastday;
     }
     catch (error){

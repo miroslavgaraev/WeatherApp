@@ -14,7 +14,7 @@ import MainScreen from './components/MainScreen';
 import { useAppDispatch } from './functions/common';
 import { checkPermission } from './functions/permission';
 import { current } from '@reduxjs/toolkit';
-import { currentWeather } from './redux/WeatherSlice';
+import { currentWeather, getWeatherForecast } from './redux/WeatherSlice';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 
@@ -31,6 +31,7 @@ function App(): React.JSX.Element {
     const result = async () => {
       const coords = await checkPermission()
       dispatch(currentWeather(coords))
+      dispatch(getWeatherForecast(coords))
     }
     result()
   }, [])
