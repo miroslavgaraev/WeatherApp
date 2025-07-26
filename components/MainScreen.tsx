@@ -15,18 +15,18 @@ import MapPin from '../assets/locationIco.svg';
 import SettingsIco from '../assets/settingsIco.svg';
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
-import {conditions} from '../functions/conditions';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 
+const CustomHandle = () => <View style={styles.handle} />;
 const MainScreen = () => {
   const {city, temp, icon, desc} = useSelector(
     (state: RootState) => state.weather,
   );
   const [modalVisible, setModalVisible] = useState(false);
-  const bottomSheetRef = useRef<BottomSheet>(null)
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index)
-  }, [])
+    console.log('handleSheetChanges', index);
+  }, []);
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={Images.backgroundOne} style={styles.background}>
@@ -45,11 +45,12 @@ const MainScreen = () => {
               <View>
                 <View>
                   <TextInput placeholder="Введите название города" />
-                  <Button title="Искать"></Button>
+                  <Button title="Искать" />
                 </View>
                 <Button
                   title="Закрыть"
-                  onPress={() => setModalVisible(false)}></Button>
+                  onPress={() => setModalVisible(false)}
+                />
               </View>
             </Modal>
             <View>
@@ -70,11 +71,27 @@ const MainScreen = () => {
             </View>
           </View>
           <View style={styles.container}>
-            {/* <BottomSheet ref={bottomSheetRef} onChange={handleSheetChanges}>
+            <BottomSheet
+              ref={bottomSheetRef}
+              handleComponent={CustomHandle}
+              onChange={handleSheetChanges}
+              // eslint-disable-next-line react-native/no-inline-styles
+              backgroundStyle={{
+                backgroundColor: 'rgba(255,255,255,0.5)',
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+              }}>
               <BottomSheetView>
-                <Text>Hello</Text>
+                <View style={styles.bottomContainer}>
+                  <TouchableOpacity style={styles.bottomActive}>
+                    <Text style={styles.btnTextActive}>По часам</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.bottomDefault}>
+                    <Text style={styles.btnTextDefault}>По дням</Text>
+                  </TouchableOpacity>
+                </View>
               </BottomSheetView>
-            </BottomSheet> */}
+            </BottomSheet>
           </View>
         </View>
       </ImageBackground>
@@ -149,13 +166,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor:'blue',
-    flexDirection: 'column'
+    flexDirection: 'column',
   },
   contentContainer: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'green',
   },
   containerHeadline: {
     fontSize: 24,
@@ -166,6 +181,44 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     width: 100,
+  },
+  bottomContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  bottomActive: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    paddingVertical: 16,
+  },
+  bottomDefault: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    borderColor: 'white',
+    borderWidth: 1,
+  },
+  btnTextActive: {
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  btnTextDefault: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  handle: {
+    height: 8,
+    width: 80,
+    backgroundColor: 'white', // желаемый цвет полоски
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginVertical: 10,
   },
 });
 

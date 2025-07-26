@@ -1,3 +1,8 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json"
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    // другие опции
+    "jsx": "react", // или "react-jsx" для React 17+
+    // остальные настройки
+  }
 }
