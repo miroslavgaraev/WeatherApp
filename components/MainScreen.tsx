@@ -13,14 +13,17 @@ import {
 import {Images} from '../assets/images';
 import MapPin from '../assets/locationIco.svg';
 import SettingsIco from '../assets/settingsIco.svg';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {conditions} from '../functions/conditions';
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
+import { getWeatherWithCity } from '../redux/WeatherSlice';
+import { useAppDispatch } from '../functions/common';
 
 const CustomHandle = () => <View style={styles.handle} />;
 
 const MainScreen = () => {
+  const dispatch = useAppDispatch()
   const {
     city,
     temp,
@@ -30,12 +33,16 @@ const MainScreen = () => {
   } = useSelector((state: RootState) => state.weather);
   const [activeButton, setActiveButton] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [newCity, setNewCity] = useState('')
   const bottomSheetRef = useRef<BottomSheet>(null);
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
   }, []);
   const snapPoints = useMemo(() => ['25%', '50%', '100%'], []);
-  console.log('forecast', days, day);
+  const getWeatherByCity = () => {
+    dispatch(getWeatherWithCity(newCity))
+    setModalVisible(false)
+  }
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={Images.backgroundOne} style={styles.background}>
@@ -47,6 +54,7 @@ const MainScreen = () => {
                 <Text style={styles.city}>{city}</Text>
               </View>
             </TouchableOpacity>
+ 
             <Modal
               animationType="slide"
               transparent={true}
@@ -56,20 +64,23 @@ const MainScreen = () => {
                   <Text style={styles.textOnInput}>
                     Введите название города:
                   </Text>
-                  <TextInput style={styles.modalInput} />
+                  <TextInput style={styles.modalInput} onChangeText={(e) => {
+                    setNewCity(e)
+                  }}/>
                   <View style={styles.buttonsCont}>
                     <TouchableOpacity
                       style={styles.btnEsc}
                       onPress={() => setModalVisible(false)}>
                       <Text style={styles.btnTextEsc}>Отмена</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnSave}>
+                    <TouchableOpacity style={styles.btnSave} onPress={getWeatherByCity}>
                       <Text style={styles.btnTextSave}>Сохранить</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
             </Modal>
+
             <View>
               <SettingsIco width={40} height={40} />
             </View>
@@ -131,7 +142,7 @@ const MainScreen = () => {
                         <View style={styles.forecastItem}>
                           <Text style={styles.forecastDate}>{day.date}</Text>
                           <Text style={styles.forecastText}>{day.text}</Text>
-                          <Text style={styles.forecastTemp}>{day.temp}</Text>
+                          <Text style={styles.forecastTemp}>{day.temp}C{'\u00B0'}</Text>
                           <Image
                             source={{uri: `https:${day.icon}`}}
                             width={40}
@@ -143,7 +154,7 @@ const MainScreen = () => {
                         <View style={styles.forecastItem}>
                           <Text style={styles.forecastDate}>{day.date}</Text>
                           <Text style={styles.forecastText}>{day.text}</Text>
-                          <Text style={styles.forecastTemp}>{day.temp}</Text>
+                          <Text style={styles.forecastTemp}>{day.temp}C{'\u00B0'}</Text>
                           <Image
                             source={{uri: `https:${day.icon}`}}
                             width={40}
@@ -228,6 +239,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     height: '100%',
+
   },
   searchCont: {
     flexDirection: 'column',
