@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import React from 'react'
-import { getCityWeather, getCurrentWeather, getForecast } from '../api/api'
+import { getCityWeather, getCurrentWeather, getForecast, getForecastCity } from '../api/api'
 
 interface DayForecast {
   temp: number,
@@ -88,6 +88,27 @@ const weatherSlice = createSlice({
       state.isLoading = false
       
     })
+    .addCase(getWeatherForecastCity.fulfilled, (state, actions) => {
+      const day = actions.payload[0].hour.map(hour => {
+        return {
+          temp: hour.temp_c,
+          date: hour.time.split(' ')[1],
+          text: hour.condition.text,
+          icon: hour.condition.icon
+        }
+      })
+      const days = actions.payload.map(day => {
+        return {
+          date: day.date.split('-').slice(2, 3).concat(day.date.split('-').slice(1, 2)).join('.'),
+          temp: day.day.avgtemp_c, 
+          text: day.day.condition.text, 
+          icon: day.day.condition.icon
+        }
+      })
+      state.forecast.days = days
+      state.forecast.day = day
+      
+    })
   }
 })
 
@@ -137,4 +158,22 @@ export const getWeatherWithCity = createAsyncThunk(
   }
 )
 
+export const getWeatherForecastCity = createAsyncThunk(
+  'getWeatherForecastCity',
+  async (newCity, thunkAPI) => {
+
+    try {
+  
+      const response = await getForecastCity(newCity)
+
+      return response.data.forecast.forecastday
+    }
+    catch (error){
+      return thunkAPI.rejectWithValue(error.message)
+    }
+  }
+)
+
+
 export default weatherSlice.reducer
+

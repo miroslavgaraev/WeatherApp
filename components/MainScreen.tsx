@@ -1,9 +1,11 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Button,
   Image,
   ImageBackground,
   Modal,
+  Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -17,8 +19,9 @@ import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {conditions} from '../functions/conditions';
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
-import { getWeatherWithCity } from '../redux/WeatherSlice';
+import { getWeatherForecastCity, getWeatherWithCity } from '../redux/WeatherSlice';
 import { useAppDispatch } from '../functions/common';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const CustomHandle = () => <View style={styles.handle} />;
 
@@ -33,20 +36,40 @@ const MainScreen = () => {
   } = useSelector((state: RootState) => state.weather);
   const [activeButton, setActiveButton] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalLangVisible, setModalLangVisible] = useState(false);
+  const [statusBarHeight, setStatusBarHeight] = useState(0)
   const [newCity, setNewCity] = useState('')
+  const [heightsArray, setHeightsArray] = useState([0,0])
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index);
+  const [bottomSheetHeight, setBottomSheetHeight] = useState(0)
+  const handleSheetChanges = useCallback((index: number, position: number) => {
+    setHeightsArray(prev => {
+      let newHeightsArray = [...prev]
+      newHeightsArray[index] = position
+      return newHeightsArray
+    })
+    console.log('handleSheetChanges', heightsArray);
+    const oppositeIndex = heightsArray.length - 1 -index
+    if (oppositeIndex < 0 || oppositeIndex >= heightsArray.length) {
+      return undefined
+    }
+    setBottomSheetHeight(heightsArray[oppositeIndex])
   }, []);
-  const snapPoints = useMemo(() => ['25%', '50%', '100%'], []);
+  const snapPoints = useMemo(() => ['6%', '100%'], []);
   const getWeatherByCity = () => {
     dispatch(getWeatherWithCity(newCity))
+    dispatch(getWeatherForecastCity(newCity))
     setModalVisible(false)
   }
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      setStatusBarHeight(StatusBar.currentHeight || 0)
+    }
+  }, [])
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={Images.backgroundOne} style={styles.background}>
-        <View style={styles.mainWrapper}>
+        <View style={[styles.mainWrapper, {paddingTop: statusBarHeight}]}>
           <View style={styles.cityBlock}>
             <TouchableOpacity onPress={() => setModalVisible(true)}>
               <View style={styles.location}>
@@ -81,9 +104,28 @@ const MainScreen = () => {
               </View>
             </Modal>
 
-            <View>
-              <SettingsIco width={40} height={40} />
-            </View>
+            <TouchableOpacity onPress={() => setModalLangVisible(true)}>    
+              <View>
+                <SettingsIco width={40} height={40} />
+              </View>
+            </TouchableOpacity> 
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalLangVisible}>
+              <View style={styles.modalCont}>
+                <View style={styles.searchCont}>
+                  <TouchableOpacity
+                      style={styles.btnSave}
+                      onPress={() => setModalLangVisible(false)}>
+                      <Text style={styles.btnTextSave}>Русский</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.btnEsc} onPress={() => setModalLangVisible(false)}>
+                      <Text style={styles.btnTextEsc}>Английский</Text>
+                    </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           </View>
           <View style={styles.weatherBlock}>
             <View>
@@ -136,12 +178,13 @@ const MainScreen = () => {
                     </Text>
                   </TouchableOpacity>
                 </View>
-                <View style={styles.forecastList}>
+                <View style={{paddingHorizontal: 20}}>
+                  <ScrollView style={{flex: 1}}>
                   {!activeButton
-                    ? days.map(day => (
-                        <View style={styles.forecastItem}>
+                    ? days.map((day, index) => (
+                        <View style={styles.forecastItem} key={index}>
                           <Text style={styles.forecastDate}>{day.date}</Text>
-                          <Text style={styles.forecastText}>{day.text}</Text>
+                          <Text style={styles.forecastText} numberOfLines={2} ellipsizeMode='tail'>{day.text.length > 10? day.text.substring(0,10) + '...' : day.text}</Text>
                           <Text style={styles.forecastTemp}>{day.temp}C{'\u00B0'}</Text>
                           <Image
                             source={{uri: `https:${day.icon}`}}
@@ -150,10 +193,10 @@ const MainScreen = () => {
                           />
                         </View>
                       ))
-                    : day.map(day => (
-                        <View style={styles.forecastItem}>
+                    : day.map((day, index) => (
+                        <View style={styles.forecastItem} key={(index)}>
                           <Text style={styles.forecastDate}>{day.date}</Text>
-                          <Text style={styles.forecastText}>{day.text}</Text>
+                          <Text style={styles.forecastText}>{day.text.length > 10? day.text.substring(0,10) + '...' : day.text}</Text>
                           <Text style={styles.forecastTemp}>{day.temp}C{'\u00B0'}</Text>
                           <Image
                             source={{uri: `https:${day.icon}`}}
@@ -162,6 +205,7 @@ const MainScreen = () => {
                           />
                         </View>
                       ))}
+                  </ScrollView>      
                 </View>
               </BottomSheetView>
             </BottomSheet>
@@ -178,20 +222,22 @@ const styles = StyleSheet.create({
 
   },
   forecastItem: {
-    flex: 1,
+    height: 55,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     marginBottom: 16,
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
+    gap: 10,
+    boxSizing: 'border-box',
   },
   forecastDate : {
     fontSize: 18
   },
   forecastText : {
-    fontSize: 18
+    fontSize: 18,
   },
   forecastTemp : {
     fontSize: 18

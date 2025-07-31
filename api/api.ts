@@ -11,3 +11,6 @@ export const getForecast = async (lat, lon) => {
 export const getCityWeather = async (city) =>{
   return await axios.get(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}&lang=ru
     `)}
+export const getForecastCity = async (city) => {
+  return await axios.get(`http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${city}&days=7&aqi=no&$lang=ru`)
+}
