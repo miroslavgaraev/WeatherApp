@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import React from 'react'
 import { getCityWeather, getCurrentWeather, getForecast, getForecastCity } from '../api/api'
 
@@ -21,16 +21,20 @@ interface WeatherState {
   city: string,
   desc: string,
   icon: string,
+  lang: string,
+  code: number,
   forecast: Forecast,
 }
 
 const initialState: WeatherState = {
-  isLoading: false,
+  isLoading: true,
   longitude: '',
   temp: 0,
   city: '',
   desc: '',
   icon: '',
+  lang: 'ru',
+  code: 0,
   forecast: {
     day: [],
     days: []
@@ -40,24 +44,24 @@ const initialState: WeatherState = {
 const weatherSlice = createSlice({
   name: 'weather',
   initialState,
-  reducers: {},
+  reducers: {
+    setLanguage: (state, action:PayloadAction<string>) => {
+      state.lang = action.payload;
+    },
+  },
   extraReducers: builder => {
     builder
-    .addCase(currentWeather.pending, state => {
-      state.isLoading = true
-    })
     .addCase(currentWeather.fulfilled, (state, actions) => {
       console.log(actions)
-      const {payload: {current: {temp_c, condition: {text, icon}}, location: {name}} } = actions
+      const {payload: {current: {temp_c, condition: {text, icon, code}}, location: {name}} } = actions
       state.temp = temp_c
       state.city = name
       state.desc = text
       state.icon = icon
-      state.isLoading = false
-      
+      state.code = code
     })
     .addCase(getWeatherForecast.fulfilled, (state, actions) => {
-
+      state.isLoading = false
       const day = actions.payload[0].hour.map(hour => {
         return {
           temp: hour.temp_c,
@@ -177,3 +181,4 @@ export const getWeatherForecastCity = createAsyncThunk(
 
 export default weatherSlice.reducer
 
+export const {setLanguage} = weatherSlice.actions

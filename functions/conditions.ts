@@ -10,7 +10,9 @@ export const conditions = [
     "code" : 1003,
     "day" : "Partly cloudy",
     "night" : "Partly cloudy",
-    "icon" : 116
+    "icon" : 116,
+    'bg': 'backgroundTwo',
+    'animation': 'RainyWS'
   },
   {
     "code" : 1006,
@@ -22,7 +24,8 @@ export const conditions = [
     "code" : 1009,
     "day" : "Overcast",
     "night" : "Overcast",
-    "icon" : 122
+    "icon" : 122,
+    'bg': 'backgroundTwo'
   },
   {
     "code" : 1030,
