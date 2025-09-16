@@ -20,13 +20,18 @@ import {RootState} from '../redux/store';
 import {conditions} from '../functions/conditions';
 import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
 import {
+  currentWeather,
+  getWeatherForecast,
   getWeatherForecastCity,
   getWeatherWithCity,
   setLanguage,
+  setNewCity,
 } from '../redux/WeatherSlice';
 import {useAppDispatch} from '../functions/common';
 import {ScrollView} from 'react-native-gesture-handler';
 import {words} from '../constants/constants';
+import { Coordinates } from '../functions/interfaces';
+import { checkPermission } from '../functions/permission';
 
 const CustomHandle = () => <View style={styles.handle} />;
 
@@ -44,9 +49,9 @@ const MainScreen = () => {
   const background = conditions.find(item => item.code == code)?.bg
   const [activeButton, setActiveButton] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [newCity, setNewCity] = useState('')
   const [modalLangVisible, setModalLangVisible] = useState(false);
   const [statusBarHeight, setStatusBarHeight] = useState(0);
-  const [newCity, setNewCity] = useState('');
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [bottomSheetHeight, setBottomSheetHeight] = useState(0);
   const [height, setHeight] = useState(0);
@@ -66,8 +71,9 @@ const MainScreen = () => {
   };
   const snapPoints = useMemo(() => ['6%', '50%', '100%'], []);
   const getWeatherByCity = () => {
-    dispatch(getWeatherWithCity(newCity));
-    dispatch(getWeatherForecastCity(newCity));
+    // dispatch(setNewCity(newCity))
+    dispatch(getWeatherWithCity({newCity, lang}));
+    dispatch(getWeatherForecastCity({newCity, lang}));
     setModalVisible(false);
   };
   useEffect(() => {
@@ -75,7 +81,22 @@ const MainScreen = () => {
       setStatusBarHeight(StatusBar.currentHeight || 0);
     }
   }, []);
-  console.log(code)
+
+  useEffect(() => {
+      const result = async () => {
+        if (newCity) {
+          console.log(newCity)
+          dispatch(getWeatherWithCity({newCity, lang}))
+          dispatch(getWeatherForecastCity({newCity, lang}))
+        }else{
+        const coords:Coordinates = await checkPermission()
+        dispatch(currentWeather({coords, lang}))
+        dispatch(getWeatherForecast({coords,lang}))
+        }
+      }
+      result()
+    }, [lang])
+
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={Images[background]} style={styles.background}>
@@ -84,7 +105,7 @@ const MainScreen = () => {
             <TouchableOpacity onPress={() => setModalVisible(true)}>
               <View style={styles.location}>
                 <MapPin width={24} height={24} />
-                <Text style={styles.city}>{city}</Text>
+                <Text style={styles.city}>{newCity ? newCity :city}</Text>
               </View>
             </TouchableOpacity>
 
@@ -99,7 +120,7 @@ const MainScreen = () => {
                   <TextInput
                     style={styles.modalInput}
                     onChangeText={e => {
-                      setNewCity(e);
+                      setNewCity(e)
                     }}
                   />
                   <View style={styles.buttonsCont}>
@@ -110,7 +131,9 @@ const MainScreen = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.btnSave}
-                      onPress={getWeatherByCity}>
+                      onPress={() => {
+                        getWeatherByCity()
+                      }}>
                       <Text style={styles.btnTextSave}>{words[lang].save}</Text>
                     </TouchableOpacity>
                   </View>
@@ -152,12 +175,12 @@ const MainScreen = () => {
           </View>
           <View style={styles.weatherBlock}>
             <View>
+              <Image source={{uri: `https:${icon}`}} width={80} height={80} />
+            </View>
+            <View style={styles.conditions}>
               <Text style={styles.temp}>
                 {temp}C{'\u00B0'}
               </Text>
-            </View>
-            <View style={styles.conditions}>
-              <Image source={{uri: `https:${icon}`}} width={80} height={50} />
               <Text numberOfLines={2} ellipsizeMode="tail" style={styles.text}>
                 {desc}
               </Text>
@@ -386,7 +409,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', // по желанию
     alignItems: 'center', // по желанию
     paddingBottom: 16,
-    // backgroundColor:'red',
   },
   weatherBlock: {
     flexDirection: 'row',
@@ -444,7 +466,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'green',
   },
   containerHeadline: {
     fontSize: 24,

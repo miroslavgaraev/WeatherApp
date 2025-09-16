@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import React from 'react'
 import { getCityWeather, getCurrentWeather, getForecast, getForecastCity } from '../api/api'
+import { City, Coordinates, Params } from '../functions/interfaces'
 
 interface DayForecast {
   temp: number,
@@ -24,6 +25,7 @@ interface WeatherState {
   lang: string,
   code: number,
   forecast: Forecast,
+  newCity: string,
 }
 
 const initialState: WeatherState = {
@@ -35,6 +37,7 @@ const initialState: WeatherState = {
   icon: '',
   lang: 'ru',
   code: 0,
+  newCity: '',
   forecast: {
     day: [],
     days: []
@@ -48,11 +51,13 @@ const weatherSlice = createSlice({
     setLanguage: (state, action:PayloadAction<string>) => {
       state.lang = action.payload;
     },
+    setNewCity: (state, action:PayloadAction<string>) => {
+      state.newCity = action.payload
+    }
   },
   extraReducers: builder => {
     builder
     .addCase(currentWeather.fulfilled, (state, actions) => {
-      console.log(actions)
       const {payload: {current: {temp_c, condition: {text, icon, code}}, location: {name}} } = actions
       state.temp = temp_c
       state.city = name
@@ -62,7 +67,7 @@ const weatherSlice = createSlice({
     })
     .addCase(getWeatherForecast.fulfilled, (state, actions) => {
       state.isLoading = false
-      const day = actions.payload[0].hour.map(hour => {
+      const day = actions.payload[0].hour.map((hour: any) => {
         return {
           temp: hour.temp_c,
           date: hour.time.split(' ')[1],
@@ -70,7 +75,7 @@ const weatherSlice = createSlice({
           icon: hour.condition.icon
         }
       })
-      const days = actions.payload.map(day => {
+      const days = actions.payload.map((day: any) => {
         return {
           date: day.date.split('-').slice(2, 3).concat(day.date.split('-').slice(1, 2)).join('.'),
           temp: day.day.avgtemp_c, 
@@ -93,7 +98,7 @@ const weatherSlice = createSlice({
       
     })
     .addCase(getWeatherForecastCity.fulfilled, (state, actions) => {
-      const day = actions.payload[0].hour.map(hour => {
+      const day = actions.payload[0].hour.map((hour: any) => {
         return {
           temp: hour.temp_c,
           date: hour.time.split(' ')[1],
@@ -101,7 +106,7 @@ const weatherSlice = createSlice({
           icon: hour.condition.icon
         }
       })
-      const days = actions.payload.map(day => {
+      const days = actions.payload.map((day: any) => {
         return {
           date: day.date.split('-').slice(2, 3).concat(day.date.split('-').slice(1, 2)).join('.'),
           temp: day.day.avgtemp_c, 
@@ -118,11 +123,12 @@ const weatherSlice = createSlice({
 
 export const currentWeather = createAsyncThunk(
   'currentWeather',
-  async (coords, thunkAPI) => {
+  async (data:Params, thunkAPI) => {
 
     try {
-      const {latitude, longitude} = coords
-      const response = await getCurrentWeather(latitude, longitude)
+      const {coords: {longitude, latitude}, lang} = data
+      
+      const response = await getCurrentWeather(latitude, longitude, lang)
       return response.data
     }
     catch (error){
@@ -133,12 +139,11 @@ export const currentWeather = createAsyncThunk(
 
 export const getWeatherForecast = createAsyncThunk(
   'getWeatherForecast',
-  async (coords, thunkAPI) => {
+  async (data:Params, thunkAPI) => {
 
     try {
-      const {latitude, longitude} = coords
-      const response = await getForecast(latitude, longitude)
-
+      const {coords: {longitude, latitude}, lang} = data
+      const response = await getForecast(latitude, longitude, lang)
       return response.data.forecast.forecastday
     }
     catch (error){
@@ -150,10 +155,11 @@ export const getWeatherForecast = createAsyncThunk(
 
 export const getWeatherWithCity = createAsyncThunk(
   'getWeatherWithCity',
-  async (newCity, thunkAPI) => {
+  async (data:City, thunkAPI) => {
     try {
-      const response = await getCityWeather(newCity)
-      console.log(response, 'newCity')
+      const {newCity, lang} = data
+      const response = await getCityWeather(newCity, lang)
+      console.log(response.data, 'newCity')
       return response.data
     }
     catch (error){
@@ -164,12 +170,13 @@ export const getWeatherWithCity = createAsyncThunk(
 
 export const getWeatherForecastCity = createAsyncThunk(
   'getWeatherForecastCity',
-  async (newCity, thunkAPI) => {
+  async (data:City, thunkAPI) => {
 
     try {
+      const {newCity, lang} = data
   
-      const response = await getForecastCity(newCity)
-
+      const response = await getForecastCity(newCity, lang)
+      console.log(response.data.forecast.forecastday, 'newCityF')
       return response.data.forecast.forecastday
     }
     catch (error){
@@ -181,4 +188,4 @@ export const getWeatherForecastCity = createAsyncThunk(
 
 export default weatherSlice.reducer
 
-export const {setLanguage} = weatherSlice.actions
+export const {setLanguage, setNewCity} = weatherSlice.actions

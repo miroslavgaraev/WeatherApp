@@ -2,15 +2,15 @@ import { Alert, Platform } from "react-native"
 import { check, openSettings, PERMISSIONS, request, RESULTS } from "react-native-permissions"
 import { getCurrentWeather } from "../api/api"
 import Geolocation from "@react-native-community/geolocation"
+import { Coordinates } from "./interfaces"
 
-export const checkPermission = async () => {
+export const checkPermission = async ():Promise<any> => {
     const permission = Platform.OS === 'ios' ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION
     const result = await check(permission)
     if (result === RESULTS.GRANTED) {
       getCurrentLocation()
-      const {longitude, latitude} = await getCurrentLocation()
-      return {longitude, latitude}
-      // const {data: {current, location}} = await getCurrentWeather(latitude, longitude)
+      const coords:Coordinates = await getCurrentLocation()
+      return coords
     }
     else{
       requestPermission(permission)
@@ -18,7 +18,7 @@ export const checkPermission = async () => {
 
   }
 
-export  const getCurrentLocation = async () => {
+export  const getCurrentLocation = async ():Promise<any> => {
     return new Promise((resolve, reject) => {
       Geolocation.getCurrentPosition(
         (pos) => {
