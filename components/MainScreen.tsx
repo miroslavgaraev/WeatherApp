@@ -28,10 +28,11 @@ import {
   setNewCity,
 } from '../redux/WeatherSlice';
 import {useAppDispatch} from '../functions/common';
-import {ScrollView} from 'react-native-gesture-handler';
+import {FlatList, ScrollView} from 'react-native-gesture-handler';
 import {words} from '../constants/constants';
-import { Coordinates } from '../functions/interfaces';
-import { checkPermission } from '../functions/permission';
+import {Coordinates} from '../functions/interfaces';
+import {checkPermission} from '../functions/permission';
+import {Skeleton} from './Skeleton';
 
 const CustomHandle = () => <View style={styles.handle} />;
 
@@ -46,10 +47,11 @@ const MainScreen = () => {
     code,
     forecast: {days, day},
   } = useSelector((state: RootState) => state.weather);
-  const background = conditions.find(item => item.code == code)?.bg
+  const background = conditions.find(item => item.code == code)?.bg;
+  const [currentList, setCurrentList] = useState(day)
   const [activeButton, setActiveButton] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [newCity, setNewCity] = useState('')
+  const [newCity, setNewCity] = useState('');
   const [modalLangVisible, setModalLangVisible] = useState(false);
   const [statusBarHeight, setStatusBarHeight] = useState(0);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -83,19 +85,27 @@ const MainScreen = () => {
   }, []);
 
   useEffect(() => {
-      const result = async () => {
-        if (newCity) {
-          console.log(newCity)
-          dispatch(getWeatherWithCity({newCity, lang}))
-          dispatch(getWeatherForecastCity({newCity, lang}))
-        }else{
-        const coords:Coordinates = await checkPermission()
-        dispatch(currentWeather({coords, lang}))
-        dispatch(getWeatherForecast({coords,lang}))
-        }
+    const result = async () => {
+      if (newCity) {
+        console.log(newCity);
+        dispatch(getWeatherWithCity({newCity, lang}));
+        dispatch(getWeatherForecastCity({newCity, lang}));
+      } else {
+        const coords: Coordinates = await checkPermission();
+        dispatch(currentWeather({coords, lang}));
+        dispatch(getWeatherForecast({coords, lang}));
       }
-      result()
-    }, [lang])
+    };
+    result();
+  }, [lang]);
+
+  useEffect(() => {
+    if(activeButton){
+      setCurrentList(day)
+    }else{
+      setCurrentList(days)
+    }
+  }, [activeButton, day, days])
 
   return (
     <View style={styles.mainContainer}>
@@ -105,7 +115,7 @@ const MainScreen = () => {
             <TouchableOpacity onPress={() => setModalVisible(true)}>
               <View style={styles.location}>
                 <MapPin width={24} height={24} />
-                <Text style={styles.city}>{newCity ? newCity :city}</Text>
+                <Text style={styles.city}>{newCity ? newCity : city}</Text>
               </View>
             </TouchableOpacity>
 
@@ -120,19 +130,21 @@ const MainScreen = () => {
                   <TextInput
                     style={styles.modalInput}
                     onChangeText={e => {
-                      setNewCity(e)
+                      setNewCity(e);
                     }}
                   />
                   <View style={styles.buttonsCont}>
                     <TouchableOpacity
                       style={styles.btnEsc}
                       onPress={() => setModalVisible(false)}>
-                      <Text style={styles.btnTextEsc}>{words[lang].cancel}</Text>
+                      <Text style={styles.btnTextEsc}>
+                        {words[lang].cancel}
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.btnSave}
                       onPress={() => {
-                        getWeatherByCity()
+                        getWeatherByCity();
                       }}>
                       <Text style={styles.btnTextSave}>{words[lang].save}</Text>
                     </TouchableOpacity>
@@ -140,7 +152,7 @@ const MainScreen = () => {
                 </View>
               </View>
             </Modal>
-
+            <Skeleton />
             <TouchableOpacity onPress={() => setModalLangVisible(true)}>
               <View>
                 <SettingsIco width={40} height={40} />
@@ -154,20 +166,30 @@ const MainScreen = () => {
               <View style={styles.modalCont}>
                 <View style={styles.searchCont}>
                   <TouchableOpacity
-                    style={lang == 'ru'? styles.btnSave : styles.btnEsc}
+                    style={lang == 'ru' ? styles.btnSave : styles.btnEsc}
                     onPress={() => {
                       setModalLangVisible(false);
                       dispatch(setLanguage('ru'));
                     }}>
-                    <Text style={lang == 'ru'? styles.btnTextSave : styles.btnTextEsc}>{words[lang].RU}</Text>
+                    <Text
+                      style={
+                        lang == 'ru' ? styles.btnTextSave : styles.btnTextEsc
+                      }>
+                      {words[lang].RU}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={lang == 'en'? styles.btnSave : styles.btnEsc}
+                    style={lang == 'en' ? styles.btnSave : styles.btnEsc}
                     onPress={() => {
                       setModalLangVisible(false);
                       dispatch(setLanguage('en'));
                     }}>
-                    <Text style={lang == 'en'? styles.btnTextSave : styles.btnTextEsc}>{words[lang].EN}</Text>
+                    <Text
+                      style={
+                        lang == 'en' ? styles.btnTextSave : styles.btnTextEsc
+                      }>
+                      {words[lang].EN}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -175,7 +197,12 @@ const MainScreen = () => {
           </View>
           <View style={styles.weatherBlock}>
             <View>
-              <Image source={{uri: `https:${icon}`}} width={80} height={80} />
+              <Image
+                style={styles.imageWeather}
+                source={{uri: `https:${icon}`}}
+                width={80}
+                height={80}
+              />
             </View>
             <View style={styles.conditions}>
               <Text style={styles.temp}>
@@ -227,46 +254,32 @@ const MainScreen = () => {
                 <View
                   style={{paddingHorizontal: 20, height: bottomSheetHeight}}>
                   <ScrollView style={{flex: 1}}>
-                    {!activeButton
-                      ? days.map((day, index) => (
-                          <View style={styles.forecastItem} key={index}>
-                            <Text style={styles.forecastDate}>{day.date}</Text>
-                            <Text
-                              style={styles.forecastText}
-                              numberOfLines={2}
-                              ellipsizeMode="tail">
-                              {day.text.length > 10
-                                ? day.text.substring(0, 10) + '...'
-                                : day.text}
-                            </Text>
-                            <Text style={styles.forecastTemp}>
-                              {day.temp}C{'\u00B0'}
-                            </Text>
-                            <Image
-                              source={{uri: `https:${day.icon}`}}
-                              width={40}
-                              height={40}
-                            />
-                          </View>
-                        ))
-                      : day.map((day, index) => (
-                          <View style={styles.forecastItem} key={index}>
-                            <Text style={styles.forecastDate}>{day.date}</Text>
-                            <Text style={styles.forecastText}>
-                              {day.text.length > 10
-                                ? day.text.substring(0, 10) + '...'
-                                : day.text}
-                            </Text>
-                            <Text style={styles.forecastTemp}>
-                              {day.temp}C{'\u00B0'}
-                            </Text>
-                            <Image
-                              source={{uri: `https:${day.icon}`}}
-                              width={40}
-                              height={40}
-                            />
-                          </View>
-                        ))}
+                    <FlatList
+                      data={currentList}
+                      keyExtractor={(item, index) => index.toString()}
+                      renderItem={({item}) => (
+                        <View style={styles.forecastItem}>
+                          <Text style={styles.forecastDate}>{item.date}</Text>
+                          <Text
+                            style={styles.forecastText}
+                            numberOfLines={2}
+                            ellipsizeMode="tail">
+                            {item.text.length > 10
+                              ? item.text.substring(0, 10) + '...'
+                              : item.text}
+                          </Text>
+                          <Text style={styles.forecastTemp}>
+                            {item.temp}C{'\u00B0'}
+                          </Text>
+                          <Image
+                            source={{uri: `https:${item.icon}`}}
+                            width={40}
+                            height={40}
+                          />
+                        </View>
+                      )}
+                    />
+                    
                   </ScrollView>
                 </View>
               </BottomSheetView>
@@ -421,6 +434,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 24,
   },
+  imageWeather: {
+    marginTop: 15,
+  },
   temp: {
     fontSize: 48,
     fontWeight: '600',
@@ -475,7 +491,7 @@ const styles = StyleSheet.create({
   conditions: {
     flexDirection: 'column',
     alignItems: 'center',
-    flex: 1
+    flex: 1,
   },
 });
 

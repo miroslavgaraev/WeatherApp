@@ -131,8 +131,17 @@ export const currentWeather = createAsyncThunk(
       const response = await getCurrentWeather(latitude, longitude, lang)
       return response.data
     }
-    catch (error){
-      return thunkAPI.rejectWithValue(error.message)
+    catch (error:unknown){
+      let message
+      if (error instanceof Error) {
+        message = error.message
+      } else if (typeof error === 'string') {
+        message = error
+      }
+      else {
+        message = 'Unknown error'
+      }
+      return thunkAPI.rejectWithValue(message)
     }
   }
 )
