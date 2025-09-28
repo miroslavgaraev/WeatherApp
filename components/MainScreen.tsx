@@ -33,6 +33,7 @@ import Skeleton from './Skeleton';
 
 const CustomHandle = () => <View style={styles.handle} />;
 
+const CustomHandle = () => <View style={styles.handle} />;
 const MainScreen = () => {
   const dispatch = useAppDispatch();
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -210,7 +211,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 16,
     gap: 10,
-    boxSizing: 'border-box',
   },
   forecastDate: {
     fontSize: 18,
@@ -407,6 +407,44 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     flex: 1,
+  },
+  bottomContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  bottomActive: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    paddingVertical: 16,
+  },
+  bottomDefault: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    borderColor: 'white',
+    borderWidth: 1,
+  },
+  btnTextActive: {
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  btnTextDefault: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  handle: {
+    height: 8,
+    width: 80,
+    backgroundColor: 'white', // желаемый цвет полоски
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginVertical: 10,
   },
 });
 
