@@ -1,6 +1,5 @@
 import React from "react"
-import { StyleSheet } from "react-native"
-import { View } from "react-native-reanimated/lib/typescript/Animated"
+import { StyleSheet, View } from "react-native"
 import SkeletonPlaceholder from "react-native-skeleton-placeholder"
 export const Skeleton = () => (
   <View style={styles.container}>

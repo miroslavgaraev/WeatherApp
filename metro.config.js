@@ -17,6 +17,17 @@ const customConfig = {
   },
 };
 // Объединяем конфиги
-const mergedConfig = mergeConfig(defaultConfig, customConfig);
+// Объединяем конфиги (если нужно; Expo позволяет merge вручную)
+const mergedConfig = {
+  ...defaultConfig,
+  transformer: {
+    ...defaultConfig.transformer,
+    ...customConfig.transformer,
+  },
+  resolver: {
+    ...defaultConfig.resolver,
+    ...customConfig.resolver,
+  },
+};
 // Если используете reanimated, оберните конфиг
 module.exports = wrapWithReanimatedMetroConfig(mergedConfig);
