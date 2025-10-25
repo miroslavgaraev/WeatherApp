@@ -31,7 +31,7 @@ const componentsMap: Record<string, React.ComponentType<any>> = {
 
 function App(): React.JSX.Element {
   const dispatch = useAppDispatch();
-  const {code, isLoading, lang} = useSelector(
+  const {code, showLoadingScreen, lang} = useSelector(
     (state: RootState) => state.weather,
   );
   const animation = conditions.find(item => item.code == code)?.animation;
@@ -47,7 +47,7 @@ function App(): React.JSX.Element {
   }, []);
   useEffect(() => {
     let timer: any;
-    if (isLoading) {
+    if (showLoadingScreen) {
       setShowDynamic(true);
     } else if (showDynamic) {
       timer = setTimeout(() => {
@@ -59,20 +59,16 @@ function App(): React.JSX.Element {
         clearTimeout(timer);
       }
     };
-  }, [isLoading, showDynamic]);
+  }, [showLoadingScreen, showDynamic]);
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
-      {isLoading ? (
-        <></>
-      ) : showDynamic ? (
-        DynamicComponent && <DynamicComponent />
-      ) : (
-        <MainScreen />
-      )}
+    <GestureHandlerRootView style={styles.container}>
+      {showDynamic ? DynamicComponent && <DynamicComponent /> : <MainScreen />}
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({});
-
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 export default App;

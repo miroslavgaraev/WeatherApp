@@ -4,6 +4,7 @@ import { WeatherState } from '../functions/interfaces';
 
 const initialState:WeatherState = {
   isLoading: true,
+  showLoadingScreen: true,
   longitude: '',
   temp: 0,
   city: '',
@@ -31,6 +32,14 @@ const weatherSlice = createSlice({
   },
   extraReducers: builder => {
     builder
+    .addCase(getWeatherForecastCity.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(currentWeather.pending, (state) => {
+        state.isLoading = true;
+        if (!state.showLoadingScreen) {return;}
+        state.showLoadingScreen = true;
+      })
       .addCase(currentWeather.fulfilled, (state, actions) => {
         const {
           payload: {
@@ -46,9 +55,10 @@ const weatherSlice = createSlice({
         state.desc = text;
         state.icon = icon;
         state.code = code;
+        state.showLoadingScreen = false;
+        state.isLoading = false;
       })
       .addCase(getWeatherForecast.fulfilled, (state, actions) => {
-        state.isLoading = false;
         const day = actions.payload[0].hour.map((hour: any) => {
           return {
             temp: hour.temp_c,
@@ -77,7 +87,7 @@ const weatherSlice = createSlice({
           payload: {
             current: {
               temp_c,
-              condition: {text, icon},
+              condition: {text, icon, code},
             },
             location: {name},
           },
@@ -86,7 +96,7 @@ const weatherSlice = createSlice({
         state.city = name;
         state.desc = text;
         state.icon = icon;
-        state.isLoading = false;
+        state.code = code;
       })
       .addCase(getWeatherForecastCity.fulfilled, (state, actions) => {
         const day = actions.payload[0].hour.map((hour: any) => {
@@ -111,7 +121,9 @@ const weatherSlice = createSlice({
         });
         state.forecast.days = days;
         state.forecast.day = day;
+        state.isLoading = false;
       });
+
   },
 });
 

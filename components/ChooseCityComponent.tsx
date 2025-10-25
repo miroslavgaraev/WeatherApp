@@ -1,3 +1,4 @@
+import React, {useState} from 'react';
 import {
   Modal,
   StyleSheet,
@@ -7,23 +8,45 @@ import {
   View,
 } from 'react-native';
 import MapPin from '../assets/locationIco.svg';
-import {useState} from 'react';
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';
 import {words} from '../constants/constants';
 import {useAppDispatch} from '../functions/common';
-import {getWeatherForecastCity, getWeatherWithCity} from '../redux/Thunks';
+import {
+  currentWeather,
+  getWeatherForecast,
+  getWeatherForecastCity,
+  getWeatherWithCity,
+} from '../redux/Thunks';
+import {Coordinates} from '../functions/interfaces';
+import {checkPermission} from '../functions/permission';
+import {useEffect} from 'react';
 const ChooseCity = () => {
   const dispatch = useAppDispatch();
   const [modalVisible, setModalVisible] = useState(false);
   const [newCity, setNewCity] = useState('');
   const {city, lang} = useSelector((state: RootState) => state.weather);
-  const getWeatherByCity = () => {
-    // dispatch(setNewCity(newCity))
-    dispatch(getWeatherWithCity({newCity, lang}));
-    dispatch(getWeatherForecastCity({newCity, lang}));
+  const [cityInput, setCityInput] = useState('');
+  const handleGetWeatherByCity = () => {
+    setNewCity(cityInput);
+    dispatch(getWeatherWithCity({newCity: cityInput, lang}));
+    dispatch(getWeatherForecastCity({newCity: cityInput, lang}));
     setModalVisible(false);
   };
+
+  useEffect(() => {
+    const result = async () => {
+      if (newCity) {
+        dispatch(getWeatherWithCity({newCity, lang}));
+        dispatch(getWeatherForecastCity({newCity, lang}));
+      } else {
+        const coords: Coordinates = await checkPermission();
+        dispatch(currentWeather({coords, lang}));
+        dispatch(getWeatherForecast({coords, lang}));
+      }
+    };
+    result();
+  }, [lang]);
   return (
     <View>
       <TouchableOpacity onPress={() => setModalVisible(true)}>
@@ -44,7 +67,7 @@ const ChooseCity = () => {
             <TextInput
               style={styles.modalInput}
               onChangeText={e => {
-                setNewCity(e);
+                setCityInput(e);
               }}
             />
             <View style={styles.buttonsCont}>
@@ -55,9 +78,7 @@ const ChooseCity = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.btnSave}
-                onPress={() => {
-                  getWeatherByCity();
-                }}>
+                onPress={handleGetWeatherByCity}>
                 <Text style={styles.btnTextSave}>{words[lang].save}</Text>
               </TouchableOpacity>
             </View>
@@ -72,6 +93,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
+    justifyContent: 'center',
     height: '100%',
   },
   searchCont: {

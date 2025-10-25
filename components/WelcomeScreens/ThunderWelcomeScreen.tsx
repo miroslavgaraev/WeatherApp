@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 import {
   Dimensions,
@@ -8,65 +8,84 @@ import {
   Text,
   View,
 } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
 const ThunderWelcomeScreen = () => {
-  const {height, width} = Dimensions.get('window')
-  console.log(width, height)
-  const welcomeText = useSharedValue<number>(0)
-  const sunOpacity = useSharedValue<number>(0)
+  const {height, width} = Dimensions.get('window');
+  console.log(width, height);
+  const welcomeText = useSharedValue<number>(0);
+  const sunOpacity = useSharedValue<number>(0);
 
   const movingSun = useAnimatedStyle(() => ({
     opacity: sunOpacity.value,
-    transform: [{scale: sunOpacity.value}]
-  }))
+    transform: [{scale: sunOpacity.value}],
+  }));
   const movingText = useAnimatedStyle(() => ({
     opacity: welcomeText.value,
-    transform: [{scale: welcomeText.value}]
-  }))
+    transform: [{scale: welcomeText.value}],
+  }));
 
-  
   React.useEffect(() => {
-    sunOpacity.value = withTiming(1, {duration:2500, easing:Easing.inOut(Easing.quad)})
-    welcomeText.value = withTiming(1, {duration:2500, easing:Easing.inOut(Easing.quad)})
-  }, [])
+    sunOpacity.value = withTiming(1, {
+      duration: 2500,
+      easing: Easing.inOut(Easing.quad),
+    });
+    welcomeText.value = withTiming(1, {
+      duration: 2500,
+      easing: Easing.inOut(Easing.quad),
+    });
+  }, []);
   return (
     <View style={styles.mainContainer}>
-      <ImageBackground source={require('../../assets/rainybg.jpg')} style={styles.background}>
-      <Image source={require('../../assets/raindrops.png')} style={styles.raindrops}></Image>
-      <Animated.View style={[movingSun]}>
-        <Image style={styles.sun} source={require('../../assets/thunder.png')}/>
-      </Animated.View>
-      <Animated.View style={[movingText]}>
-        <Text style={[styles.welcomeText]}>Добро пожаловать</Text>
-      </Animated.View>
+      <ImageBackground
+        source={require('../../assets/rainybg.jpg')}
+        style={styles.background}>
+        <Image
+          source={require('../../assets/raindrops.png')}
+          style={styles.raindrops}
+        />
+        <Animated.View style={[movingSun]}>
+          <Image
+            style={styles.sun}
+            source={require('../../assets/thunder.png')}
+          />
+        </Animated.View>
+        <Animated.View style={[movingText]}>
+          <Text style={[styles.welcomeText]}>Добро пожаловать</Text>
+        </Animated.View>
       </ImageBackground>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   sun: {
     width: 150,
-    height: 150
+    height: 150,
   },
   cloud: {
     width: 150,
-    height: 150
+    height: 150,
   },
   mainContainer: {
     flex: 1,
-    backgroundColor: "red",
   },
   background: {
     flex: 1,
     resizeMode: 'cover',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative'
+    position: 'relative',
   },
   welcomeText: {
-    fontSize:30,
+    fontSize: 30,
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -77,13 +96,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
     backgroundColor: '#2b7dff',
     padding: 10,
-    borderRadius: 10
+    borderRadius: 10,
   },
   raindrops: {
     width: 500,
     height: 1000,
-    position: 'absolute'
-  }
+    position: 'absolute',
+  },
 });
 
-export default ThunderWelcomeScreen
+export default ThunderWelcomeScreen;

@@ -33,4 +33,5 @@ export interface WeatherState {
   code: number;
   forecast: Forecast;
   newCity: string;
+  showLoadingScreen: boolean
 }

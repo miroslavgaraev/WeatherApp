@@ -1,14 +1,15 @@
+import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 
 const Skeleton = () => (
   <View style={styles.container}>
-    <SkeletonPlaceholder>
+    <SkeletonPlaceholder children={undefined}>
       <SkeletonPlaceholder.Item
         flexDirection="row"
         alignItems="center"
-        padding={20}
         height={80}
+        borderRadius={16}
       />
     </SkeletonPlaceholder>
   </View>
@@ -16,7 +17,8 @@ const Skeleton = () => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 20,
+    boxSizing: 'border-box',
+    marginVertical: 10,
   },
 });
 export default Skeleton;

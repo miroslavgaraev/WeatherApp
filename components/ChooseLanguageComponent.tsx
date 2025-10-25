@@ -1,6 +1,6 @@
+import React, {useState} from 'react';
 import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {words} from '../constants/constants';
-import {useState} from 'react';
 import {useAppDispatch} from '../functions/common';
 import {useSelector} from 'react-redux';
 import {RootState} from '../redux/store';

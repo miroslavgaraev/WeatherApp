@@ -1,5 +1,4 @@
-/* eslint-disable react-native/no-inline-styles */
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Image,
   ImageBackground,
@@ -7,67 +6,24 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import {Images} from '../assets/images';
 import {RootState} from '../redux/store';
 import {conditions} from '../functions/conditions';
-import BottomSheet, {BottomSheetView} from '@gorhom/bottom-sheet';
-
-import {useAppDispatch} from '../functions/common';
-import {FlatList, ScrollView} from 'react-native-gesture-handler';
-import {words} from '../constants/constants';
-import {Coordinates} from '../functions/interfaces';
-import {checkPermission} from '../functions/permission';
 import {useSelector} from 'react-redux';
 import ChooseCity from './ChooseCityComponent';
 import ChooseLanguageComponent from './ChooseLanguageComponent';
-import {
-  currentWeather,
-  getWeatherForecast,
-  getWeatherForecastCity,
-  getWeatherWithCity,
-} from '../redux/Thunks';
+
 import Skeleton from './Skeleton';
+import Modal from './Modal';
 
-const CustomHandle = () => <View style={styles.handle} />;
-
-const CustomHandle = () => <View style={styles.handle} />;
 const MainScreen = () => {
-  const dispatch = useAppDispatch();
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const {
-    temp,
-    icon,
-    desc,
-    lang,
-    code,
-    forecast: {days, day},
-  } = useSelector((state: RootState) => state.weather);
-  const [activeButton, setActiveButton] = useState(true);
-  const [newCity, setNewCity] = useState('');
+  const {temp, icon, desc, lang, code, isLoading, city} = useSelector(
+    (state: RootState) => state.weather,
+  );
   const [statusBarHeight, setStatusBarHeight] = useState(0);
-  const [bottomSheetHeight, setBottomSheetHeight] = useState(0);
-  const [height, setHeight] = useState(0);
-  const [currentList, setCurrentList] = useState(day);
-
   const background = conditions.find(item => item.code === code)?.bg;
-  const handleSheetChanges = useCallback((index: number) => {
-    if (height) {
-      if (index === 1) {
-        setBottomSheetHeight(height / 2 - 100);
-      } else {
-        setBottomSheetHeight(height - 100);
-      }
-    }
-  }, []);
-
-  const handleLayout = (event: any) => {
-    const {height} = event.nativeEvent.layout;
-    setHeight(height);
-  };
-  const snapPoints = useMemo(() => ['6%', '50%', '100%'], []);
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -75,27 +31,6 @@ const MainScreen = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const result = async () => {
-      if (newCity) {
-        dispatch(getWeatherWithCity({newCity, lang}));
-        dispatch(getWeatherForecastCity({newCity, lang}));
-      } else {
-        const coords: Coordinates = await checkPermission();
-        dispatch(currentWeather({coords, lang}));
-        dispatch(getWeatherForecast({coords, lang}));
-      }
-    };
-    result();
-  }, [dispatch, lang, newCity]);
-
-  useEffect(() => {
-    if (!activeButton) {
-      setCurrentList(days);
-    } else {
-      setCurrentList(day);
-    }
-  }, [activeButton, day, days]);
   return (
     <View style={styles.mainContainer}>
       <ImageBackground source={Images[background]} style={styles.background}>
@@ -104,93 +39,27 @@ const MainScreen = () => {
             <ChooseCity />
             <ChooseLanguageComponent />
           </View>
-          <View style={styles.weatherBlock}>
-            <View>
-              <Image source={{uri: `https:${icon}`}} width={80} height={80} />
+          {isLoading ? (
+            <Skeleton />
+          ) : (
+            <View style={styles.weatherBlock}>
+              <View>
+                <Image source={{uri: `https:${icon}`}} width={80} height={80} />
+              </View>
+              <View style={styles.conditions}>
+                <Text style={styles.temp}>
+                  {temp}C{'\u00B0'}
+                </Text>
+                <Text
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                  style={styles.text}>
+                  {desc}
+                </Text>
+              </View>
             </View>
-            <View style={styles.conditions}>
-              <Text style={styles.temp}>
-                {temp}C{'\u00B0'}
-              </Text>
-              <Text numberOfLines={2} ellipsizeMode="tail" style={styles.text}>
-                {desc}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.container} onLayout={handleLayout}>
-            <BottomSheet
-              handleComponent={CustomHandle}
-              backgroundStyle={{
-                backgroundColor: 'rgba(255,255,255,0.5)',
-                borderTopLeftRadius: 32,
-                borderTopRightRadius: 32,
-              }}
-              ref={bottomSheetRef}
-              onChange={handleSheetChanges}
-              snapPoints={snapPoints}>
-              <BottomSheetView>
-                <View style={styles.bottomCont}>
-                  <TouchableOpacity
-                    onPress={() => setActiveButton(true)}
-                    style={activeButton ? styles.btnActive : styles.btnDefault}>
-                    <Text
-                      style={
-                        activeButton
-                          ? styles.btnTextActive
-                          : styles.btnTextDefault
-                      }>
-                      {words[lang].hours}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setActiveButton(false)}
-                    style={activeButton ? styles.btnDefault : styles.btnActive}>
-                    <Text
-                      style={
-                        activeButton
-                          ? styles.btnTextDefault
-                          : styles.btnTextActive
-                      }>
-                      {words[lang].days}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                <View
-                  style={{paddingHorizontal: 20, height: bottomSheetHeight}}>
-                  <FlatList
-                    data={currentList}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={({item}) => (
-                      <View style={styles.forecastItem}>
-                        <Text style={styles.forecastDate}>{item.date}</Text>
-                        <Text
-                          style={styles.forecastText}
-                          numberOfLines={2}
-                          ellipsizeMode="tail">
-                          {item.text.length > 10
-                            ? item.text.substring(0, 10) + '...'
-                            : item.text}
-                        </Text>
-                        <Text style={styles.forecastTemp}>
-                          {item.temp}C{'\u00B0'}
-                        </Text>
-                        <Image
-                          source={{uri: `https:${item.icon}`}}
-                          width={40}
-                          height={40}
-                        />
-                      </View>
-                    )}
-                  />
-                  <FlatList
-                    data={currentList}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={({item}) => <Skeleton />}
-                  />
-                </View>
-              </BottomSheetView>
-            </BottomSheet>
-          </View>
+          )}
+          <Modal />
         </View>
       </ImageBackground>
     </View>
@@ -316,7 +185,6 @@ const styles = StyleSheet.create({
   },
   mainContainer: {
     flex: 1,
-    backgroundColor: 'red',
   },
   mainWrapper: {
     padding: 20,
@@ -360,17 +228,17 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
 
-  modalCont: {
-    position: 'absolute',
-    zIndex: 10,
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // modalCont: {
+  //   position: 'absolute',
+  //   zIndex: 10,
+  //   top: 0,
+  //   bottom: 0,
+  //   left: 0,
+  //   right: 0,
+  //   backgroundColor: 'rgba(0,0,0,0.5)',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  // },
   settings: {
     width: 40,
     height: 40,
@@ -429,23 +297,23 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     borderWidth: 1,
   },
-  btnTextActive: {
-    textAlign: 'center',
-    fontSize: 18,
-  },
-  btnTextDefault: {
-    color: 'white',
-    textAlign: 'center',
-    fontSize: 18,
-  },
-  handle: {
-    height: 8,
-    width: 80,
-    backgroundColor: 'white', // желаемый цвет полоски
-    borderRadius: 3,
-    alignSelf: 'center',
-    marginVertical: 10,
-  },
+  // btnTextActive: {
+  //   textAlign: 'center',
+  //   fontSize: 18,
+  // },
+  // btnTextDefault: {
+  //   color: 'white',
+  //   textAlign: 'center',
+  //   fontSize: 18,
+  // },
+  // handle: {
+  //   height: 8,
+  //   width: 80,
+  //   backgroundColor: 'white', // желаемый цвет полоски
+  //   borderRadius: 3,
+  //   alignSelf: 'center',
+  //   marginVertical: 10,
+  // },
 });
 
 export default MainScreen;

@@ -1,6 +1,5 @@
 import { Alert, Platform } from "react-native"
 import { check, openSettings, PERMISSIONS, request, RESULTS } from "react-native-permissions"
-import { getCurrentWeather } from "../api/api"
 import Geolocation from "@react-native-community/geolocation"
 import { Coordinates } from "./interfaces"
 
