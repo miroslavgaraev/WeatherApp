@@ -51,7 +51,7 @@ const Modal = () => {
         handlePosition="inside"
         handleStyle={styles.dragHandle}
         overlayStyle={styles.overStyle}
-        scrollViewProps={{scrollEnabled: false}}
+        // scrollViewProps={{scrollEnabled: false}}
         closeOnOverlayTap={false}>
         <View style={styles.bottomCont}>
           <TouchableOpacity
@@ -80,7 +80,7 @@ const Modal = () => {
             data={currentList}
             nestedScrollEnabled={true}
             keyExtractor={(item, index) => index.toString()}
-            showsVerticalScrollIndicator={true} // Показать индикатор прокрутки
+            // showsVerticalScrollIndicator={true} // Показать индикатор прокрутки
             renderItem={({item}) => {
               if (isLoading) {
                 return <Skeleton />;
